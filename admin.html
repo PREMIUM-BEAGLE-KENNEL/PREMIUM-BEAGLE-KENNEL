@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบหลังบ้าน - บีเกิ้ลบ้านม้าหมุน</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg-color: #f4f6f9; --surface-color: #ffffff; --primary: #c59b7b; --text-main: #333; --border: #e1e6eb; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); }
+
+        /* LOGIN BOX */
+        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .login-card { background: var(--surface-color); padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; }
+        .login-card h2 { margin-bottom: 25px; color: #a07658; }
+        .form-group { margin-bottom: 18px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 14px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; }
+        .btn-submit { width: 100%; padding: 12px; background: #a07658; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 10px; transition: 0.3s; }
+        .btn-submit:hover { background: #855f43; }
+
+        /* ADMIN DASHBOARD (HIDDEN FIRST) */
+        .dashboard { display: none; padding: 40px 5%; }
+        .dashboard.active { display: block; }
+        .dash-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 20px; margin-bottom: 30px; }
+        .btn-logout { padding: 8px 16px; background: #e74c3c; color: white; text-decoration: none; border-radius: 8px; }
+
+        /* PANEL DESIGN */
+        .manager-wrapper { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+        .upload-section { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); height: fit-content; }
+        .display-section { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        
+        select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 15px; font-size: 14px; }
+        
+        /* ADMIN IMAGES LIST */
+        .admin-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; margin-top: 20px; }
+        .admin-img-card { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); aspect-ratio: 1; }
+        .admin-img-card img { width: 100%; height: 100%; object-fit: cover; }
+        .btn-delete-img { position: absolute; top: 5px; right: 5px; background: rgba(231,76,60,0.9); color: white; border: none; width: 25px; height: 25px; border-radius: 50%; cursor: pointer; font-size: 12px; }
+        
+        @media (max-width: 900px) { .manager-wrapper { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <!-- 1. หน้าต่างกรอกรหัส LOGIN -->
+    <div class="login-container" id="login-container">
+        <div class="login-card">
+            <h2>Admin Login หลังบ้าน</h2>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="username" placeholder="ใส่ชื่อผู้ใช้">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="ใส่รหัสผ่าน">
+            </div>
+            <button class="btn-submit" onclick="checkLogin()">เข้าสู่ระบบหลังบ้าน</button>
+        </div>
+    </div>
+
+    <!-- 2. ส่วนของระบบจัดการแผงควบคุมหลังบ้าน -->
+    <div class="dashboard" id="dashboard-panel">
+        <div class="dash-header">
+            <h2><i class="fa-solid fa-gauge-high"></i> แผงควบคุมระบบจัดการรูปภาพ ฟาร์มบีเกิ้ลบ้านม้าหมุน</h2>
+            <div>
+                <a href="index.html" class="btn-submit" style="text-decoration:none; padding:8px 16px; background:#2ecc71; margin-right:10px;">ไปหน้าหลักเว็บ</a>
+                <a href="#" class="btn-logout" onclick="logout()">ออกจากระบบ</a>
+            </div>
+        </div>
+
+        <div class="manager-wrapper">
+            <!-- คอลัมน์อัปโหลดรูปภาพ -->
+            <div class="upload-section">
+                <h3><i class="fa-solid fa-cloud-arrow-up"></i> เพิ่มรูปภาพใหม่</h3>
+                <br>
+                <label style="display:block; margin-bottom:5px;">เลือกหน้าเพจปลายทางที่ต้องการให้แสดงรูป</label>
+                <select id="target-page">
+                    <option value="dogs">คลังรูปน้องหมา (dogs.html)</option>
+                    <option value="shows">ผลงานการประกวด (shows.html)</option>
+                </select>
+
+                <label style="display:block; margin-bottom:5px;">เลือกไฟล์รูปภาพจากอุปกรณ์</label>
+                <input type="file" id="admin-file-input" accept="image/*" multiple style="margin-bottom: 20px;">
+                
+                <button class="btn-submit" onclick="uploadImages()"><i class="fa-solid fa-circle-plus"></i> บันทึกข้อมูลและอัปโหลด</button>
+            </div>
+
+            <!-- คอลัมน์แสดงรูปภาพและลบรูปภาพ -->
+            <div class="display-section">
+                <h3><i class="fa-solid fa-images"></i> รูปภาพปัจจุบันที่คุณเพิ่มเข้าไปในระบบ</h3>
+                <br>
+                <h4>หมวด: คลังรูปน้องหมา</h4>
+                <div class="admin-gallery-grid" id="admin-dogs-list"></div>
+                <br><hr><br>
+                <h4>หมวด: ผลงานการประกวด</h4>
+                <div class="admin-gallery-grid" id="admin-shows-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ฟังก์ชันระบบล็อกอินความปลอดภัยเบื้องต้น
+        function checkLogin() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
+            if(user === 'admin' && pass === '123456') {
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('dashboard-panel').classList.add('active');
+                renderAdminGallery();
+            } else {
+                alert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง! กรุณาลองใหม่อีกครั้ง');
+            }
+        }
+
+        function logout() {
+            location.reload();
+        }
+
+        // ฟังก์ชันอัปโหลดและแปลงภาพจัดเก็บลงฐานข้อมูลจำลอง (LocalStorage)
+        function uploadImages() {
+            const fileInput = document.getElementById('admin-file-input');
+            const targetPage = document.getElementById('target-page').value;
+            const files = fileInput.files;
+
+            if(files.length === 0) {
+                alert('กรุณาเลือกไฟล์รูปภาพก่อนกดอัปโหลดครับ');
+                return;
+            }
+
+            let storageKey = targetPage === 'dogs' ? 'uploaded_dogs' : 'uploaded_shows';
+            let currentImages = JSON.parse(localStorage.getItem(storageKey) || '[]');
+
+            for (let i = 0; i < files.length; i++) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentImages.push(e.target.result);
+                    localStorage.setItem(storageKey, JSON.stringify(currentImages));
+                    renderAdminGallery();
+                };
+                reader.readAsDataURL(files[i]);
+            }
+
+            alert('อัปโหลดรูปภาพเสร็จสิ้น! ระบบนำภาพไปแสดงบนหน้าเว็บเรียบร้อยครับ');
+            fileInput.value = ''; // เคลียร์ไฟล์ช่องอัปโหลดค้าง
+        }
+
+        // ฟังก์ชันวาดแสดงรูปบนหลังบ้านเพื่อรอกดแก้ไขลบข้อมูล
+        function renderAdminGallery() {
+            const dogsList = document.getElementById('admin-dogs-list');
+            const showsList = document.getElementById('admin-shows-list');
+            
+            dogsList.innerHTML = '';
+            showsList.innerHTML = '';
+
+            // ดึงกลุ่มรูปคลังหมา
+            let dogs = JSON.parse(localStorage.getItem('uploaded_dogs') || '[]');
+            dogs.forEach((img, index) => {
+                dogsList.appendChild(createImageCard(img, index, 'uploaded_dogs'));
+            });
+
+            // ดึงกลุ่มรูปประกวดโชว์
+            let shows = JSON.parse(localStorage.getItem('uploaded_shows') || '[]');
+            shows.forEach((img, index) => {
+                showsList.appendChild(createImageCard(img, index, 'uploaded_shows'));
+            });
+        }
+
+        function createImageCard(imgData, index, key) {
+            const card = document.createElement('div');
+            card.className = 'admin-img-card';
+            card.innerHTML = `
+                <img src="${imgData}">
+                <button class="btn-delete-img" onclick="deleteImage('${key}', ${index})">&times;</button>
+            `;
+            return card;
+        }
+
+        // ฟังก์ชันลบรูปภาพ
+        function deleteImage(key, index) {
+            if(confirm('คุณแน่ใจหรือไม่ที่จะลบรูปภาพนี้ออกจากระบบหน้าร้าน?')) {
+                let images = JSON.parse(localStorage.getItem(key) || '[]');
+                images.splice(index, 1);
+                localStorage.setItem(key, JSON.stringify(images));
+                renderAdminGallery();
+            }
+        }
+    </script>
+</body>
+</html>
